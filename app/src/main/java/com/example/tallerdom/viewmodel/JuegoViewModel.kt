@@ -18,8 +18,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import com.example.tallerdom.data.HistorialRepository
+import com.example.tallerdom.model.RegistroHistorial
 
-// todo lo que la pantalla de juego necesita para dibujarse
+
 data class JuegoUiState(
     val miUid: String = "",
     val partida: Partida? = null,
