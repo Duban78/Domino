@@ -125,4 +125,28 @@ class SalaRepository(
             ResultadoJugada.Ok(GeneradorPartida.iniciarPartida(partida))
         }
     }
+
+    // el anfitrion (primer jugador) cancela y borra la sala, el invitado solo sale
+    suspend fun salirDeEspera(codigo: String, uid: String): Result<Unit> {
+        return try {
+            val ref = salas.document(codigo)
+
+            db.runTransaction { tr ->
+                val partida = tr.get(ref).toObject(Partida::class.java)
+                if (partida != null && partida.estado == EstadoPartida.ESPERANDO) {
+                    if (partida.jugadores.firstOrNull()?.uid == uid) {
+                        tr.delete(ref)
+                    } else {
+                        val quedan = partida.jugadores.filter { it.uid != uid }
+                        tr.set(ref, partida.copy(jugadores = quedan))
+                    }
+                }
+                null
+            }.await()
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }
