@@ -60,7 +60,7 @@ fun MenuScreen(
         }
         Spacer(Modifier.height(12.dp))
 
-        // boton nuevo: abre la pantalla de historial
+
         Button(
             onClick = onHistorial,
             enabled = !cargando,
