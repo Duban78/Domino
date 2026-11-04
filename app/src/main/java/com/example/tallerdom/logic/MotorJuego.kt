@@ -1,14 +1,15 @@
 package com.example.tallerdom.logic
 
+import com.example.tallerdom.model.Casilla
 import com.example.tallerdom.model.EstadoPartida
 import com.example.tallerdom.model.Ficha
 import com.example.tallerdom.model.Partida
 import com.example.tallerdom.model.TipoCasilla
 
-// Todo el flujo del juego. No usa Android ni Firebase para poder probarlo con tests
+
 object MotorJuego {
 
-    // revisa lo basico de cualquier accion: partida activa y turno del jugador
+
     private fun errorDeTurno(partida: Partida, uid: String): String? {
         if (partida.estado != EstadoPartida.EN_JUEGO) return "La partida no esta en juego"
         if (partida.turnoUid != uid) return "No es tu turno"
@@ -16,28 +17,15 @@ object MotorJuego {
         return null
     }
 
-    fun colocarFicha(
+
+    private fun conquistar(
         partida: Partida,
         uid: String,
         ficha: Ficha,
-        fila: Int,
-        columna: Int
-    ): ResultadoJugada {
-        val errorTurno = errorDeTurno(partida, uid)
-        if (errorTurno != null) return ResultadoJugada.Error(errorTurno)
+        casilla: Casilla,
+        sacarDeMano: Boolean
+    ): Partida {
 
-        val jugador = partida.jugadorPorUid(uid)
-            ?: return ResultadoJugada.Error("Jugador no encontrado")
-        if (!jugador.mano.contains(ficha)) {
-            return ResultadoJugada.Error("Esa ficha no esta en tu mano")
-        }
-        if (!ReglasDomino.movimientoValido(partida.tablero, ficha, fila, columna)) {
-            return ResultadoJugada.Error("Movimiento no valido")
-        }
-        val casilla = partida.tablero.casillaEn(fila, columna)
-            ?: return ResultadoJugada.Error("Casilla no existe")
-
-        // la fortaleza necesita dos conquistas, las demas una sola
         val conquistas = casilla.conquistas + 1
         val completa = casilla.tipo != TipoCasilla.FORTALEZA || conquistas >= 2
 
@@ -52,7 +40,7 @@ object MotorJuego {
         val jugadoresNuevos = partida.jugadores.map { j ->
             if (j.uid == uid) {
                 val manoNueva = j.mano.toMutableList()
-                manoNueva.remove(ficha)
+                if (sacarDeMano) manoNueva.remove(ficha)
                 j.copy(
                     mano = manoNueva,
                     puntaje = j.puntaje + puntos,
@@ -61,21 +49,114 @@ object MotorJuego {
             } else j
         }
 
-        val actualizada = partida.copy(
+        return partida.copy(
             tablero = partida.tablero.reemplazar(casillaNueva),
             jugadores = jugadoresNuevos,
             pasesSeguidos = 0
         )
+    }
 
-        // TODO: portal (lo hace mi companero), aqui hay que revisar si casilla.tipo == PORTAL
+    fun colocarFicha(
+        partida: Partida,
+        uid: String,
+        ficha: Ficha,
+        fila: Int,
+        columna: Int
+    ): ResultadoJugada {
+        val errorTurno = errorDeTurno(partida, uid)
+        if (errorTurno != null) return ResultadoJugada.Error(errorTurno)
+        if (partida.portalFila >= 0) {
+            return ResultadoJugada.Error("Primero mueve la ficha del portal")
+        }
+
+        val jugador = partida.jugadorPorUid(uid)
+            ?: return ResultadoJugada.Error("Jugador no encontrado")
+        if (!jugador.mano.contains(ficha)) {
+            return ResultadoJugada.Error("Esa ficha no esta en tu mano")
+        }
+        if (!ReglasDomino.movimientoValido(partida.tablero, ficha, fila, columna)) {
+            return ResultadoJugada.Error("Movimiento no valido")
+        }
+        val casilla = partida.tablero.casillaEn(fila, columna)
+            ?: return ResultadoJugada.Error("Casilla no existe")
+
+        val actualizada = conquistar(partida, uid, ficha, casilla, true)
+
+        if (casilla.tipo == TipoCasilla.PORTAL) {
+            val conPortal = actualizada.copy(portalFila = fila, portalColumna = columna)
+            if (destinosPortal(conPortal).isNotEmpty()) {
+                return ResultadoJugada.Ok(conPortal)
+            }
+        }
 
         return ResultadoJugada.Ok(revisarFin(avanzarTurno(actualizada)))
     }
 
-    // si no tiene jugada, el jugador toma la primera ficha del pozo
+
+    fun destinosPortal(partida: Partida): List<Casilla> {
+        if (partida.portalFila < 0) return emptyList()
+        val origen = partida.tablero.casillaEn(partida.portalFila, partida.portalColumna)
+            ?: return emptyList()
+        val ficha = origen.ficha ?: return emptyList()
+
+        // se prueba como si el portal estuviera vacio
+        val sinPortal = partida.tablero.reemplazar(
+            origen.copy(ficha = null, duenoUid = null, conquistas = 0)
+        )
+        return ReglasDomino.casillasValidas(sinPortal, ficha)
+            .filter { it.fila != origen.fila || it.columna != origen.columna }
+    }
+
+
+    fun usarPortal(
+        partida: Partida,
+        uid: String,
+        filaDestino: Int,
+        colDestino: Int
+    ): ResultadoJugada {
+        val errorTurno = errorDeTurno(partida, uid)
+        if (errorTurno != null) return ResultadoJugada.Error(errorTurno)
+        if (partida.portalFila < 0) return ResultadoJugada.Error("No hay portal activo")
+
+        val valido = destinosPortal(partida).any {
+            it.fila == filaDestino && it.columna == colDestino
+        }
+        if (!valido) return ResultadoJugada.Error("Movimiento no valido")
+
+        val origen = partida.tablero.casillaEn(partida.portalFila, partida.portalColumna)
+            ?: return ResultadoJugada.Error("El portal no existe")
+        val ficha = origen.ficha
+            ?: return ResultadoJugada.Error("No hay ficha en el portal")
+        val destino = partida.tablero.casillaEn(filaDestino, colDestino)
+            ?: return ResultadoJugada.Error("Casilla no existe")
+
+
+        val liberada = partida.copy(
+            tablero = partida.tablero.reemplazar(
+                origen.copy(ficha = null, duenoUid = null, conquistas = 0)
+            ),
+            jugadores = partida.jugadores.map { j ->
+                if (j.uid == uid) j.copy(
+                    puntaje = j.puntaje - Puntuacion.PUNTOS_TERRITORIO,
+                    territorios = j.territorios - 1
+                ) else j
+            },
+            portalFila = -1,
+            portalColumna = -1
+        )
+
+
+        val conquistada = conquistar(liberada, uid, ficha, destino, false)
+        return ResultadoJugada.Ok(revisarFin(avanzarTurno(conquistada)))
+    }
+
+
     fun robarFicha(partida: Partida, uid: String): ResultadoJugada {
         val errorTurno = errorDeTurno(partida, uid)
         if (errorTurno != null) return ResultadoJugada.Error(errorTurno)
+        if (partida.portalFila >= 0) {
+            return ResultadoJugada.Error("Primero mueve la ficha del portal")
+        }
 
         val jugador = partida.jugadorPorUid(uid)
             ?: return ResultadoJugada.Error("Jugador no encontrado")
@@ -93,14 +174,16 @@ object MotorJuego {
                 if (j.uid == uid) j.copy(mano = j.mano + fichaRobada) else j
             }
         )
-        // no se cambia el turno: puede jugar la ficha que robo o seguir robando
+
         return ResultadoJugada.Ok(actualizada)
     }
 
-    // pierde el turno: no tiene jugada y no quedan fichas en el pozo
     fun pasarTurno(partida: Partida, uid: String): ResultadoJugada {
         val errorTurno = errorDeTurno(partida, uid)
         if (errorTurno != null) return ResultadoJugada.Error(errorTurno)
+        if (partida.portalFila >= 0) {
+            return ResultadoJugada.Error("Primero mueve la ficha del portal")
+        }
 
         val jugador = partida.jugadorPorUid(uid)
             ?: return ResultadoJugada.Error("Jugador no encontrado")
@@ -115,7 +198,7 @@ object MotorJuego {
         return ResultadoJugada.Ok(revisarFin(avanzarTurno(conPase)))
     }
 
-    // pasa el turno al siguiente jugador, si vuelve al primero sube la ronda
+
     fun avanzarTurno(partida: Partida): Partida {
         val actual = partida.jugadores.indexOfFirst { it.uid == partida.turnoUid }
         val siguiente = (actual + 1) % partida.jugadores.size
@@ -127,7 +210,7 @@ object MotorJuego {
         )
     }
 
-    // detecta si la partida debe terminar y calcula el ganador
+
     fun revisarFin(partida: Partida): Partida {
         val alguienSinFichas = partida.jugadores.any { it.mano.isEmpty() }
         val nadiePuedeMover = partida.pasesSeguidos >= partida.jugadores.size
@@ -142,7 +225,6 @@ object MotorJuego {
         )
     }
 
-    // el jugador se sale en plena partida: termina y gana el rival
     fun abandonar(partida: Partida, uid: String): ResultadoJugada {
         if (partida.estado != EstadoPartida.EN_JUEGO) {
             return ResultadoJugada.Error("La partida no esta en juego")
@@ -157,11 +239,7 @@ object MotorJuego {
         )
     }
 
-    // vuelve a repartir y empezar con los mismos jugadores (solo si ya termino)
+
     fun reiniciar(partida: Partida): ResultadoJugada {
         if (partida.estado != EstadoPartida.TERMINADA) {
             return ResultadoJugada.Error("La partida todavia no termino")
-        }
-        return ResultadoJugada.Ok(GeneradorPartida.iniciarPartida(partida))
-    }
-}
