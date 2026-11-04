@@ -77,9 +77,12 @@ class LobbyViewModel(
         }
     }
 
+    // al dejar la sala borramos tambien lo que quedo guardado, si no la proxima
+    // sala que abrimos veria datos de la anterior
     fun detenerEscucha() {
         escucha?.cancel()
         escucha = null
+        _estado.update { it.copy(partida = null, salaCerrada = false) }
     }
 
     fun iniciarPartida(codigo: String) {
