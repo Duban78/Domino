@@ -15,6 +15,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.tallerdom.model.EstadoPartida
 import com.example.tallerdom.ui.screens.EsperaScreen
+import com.example.tallerdom.ui.screens.HistorialScreen
 import com.example.tallerdom.ui.screens.JuegoScreen
 import com.example.tallerdom.ui.screens.LoginScreen
 import com.example.tallerdom.ui.screens.MenuScreen
@@ -22,10 +23,9 @@ import com.example.tallerdom.ui.screens.RegistroScreen
 import com.example.tallerdom.ui.screens.ResultadoScreen
 import com.example.tallerdom.ui.screens.UnirseScreen
 import com.example.tallerdom.viewmodel.AuthViewModel
+import com.example.tallerdom.viewmodel.HistorialViewModel
 import com.example.tallerdom.viewmodel.JuegoViewModel
 import com.example.tallerdom.viewmodel.LobbyViewModel
-import com.example.tallerdom.ui.screens.HistorialScreen
-import com.example.tallerdom.viewmodel.HistorialViewModel
 
 @Composable
 fun AppNavigation(modifier: Modifier = Modifier) {
@@ -33,14 +33,15 @@ fun AppNavigation(modifier: Modifier = Modifier) {
     val authVm: AuthViewModel = viewModel()
     val lobbyVm: LobbyViewModel = viewModel()
     val juegoVm: JuegoViewModel = viewModel()
+    val historialVm: HistorialViewModel = viewModel()   // <- nuevo
     val auth by authVm.estado.collectAsStateWithLifecycle()
 
-    // si ya hay sesion arrancamos en el menu, si no en el login
+
     val inicio = remember {
         if (authVm.estado.value.usuarioUid != null) Rutas.MENU else Rutas.LOGIN
     }
 
-    // cuando cambia la sesion (login o cerrar sesion) movemos la navegacion
+
     LaunchedEffect(auth.usuarioUid) {
         val destino = navController.currentDestination?.route ?: return@LaunchedEffect
         val enPantallaDeAcceso = destino == Rutas.LOGIN || destino == Rutas.REGISTRO
@@ -103,7 +104,25 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                     lobbyVm.limpiarError()
                     navController.navigate(Rutas.UNIRSE)
                 },
+                onHistorial = {                                   // <- nuevo
+                    navController.navigate(Rutas.HISTORIAL)
+                },
                 onCerrarSesion = authVm::cerrarSesion
+            )
+        }
+
+
+        composable(Rutas.HISTORIAL) {
+            val historial by historialVm.estado.collectAsStateWithLifecycle()
+
+            // carga las partidas del usuario al entrar a la pantalla
+            LaunchedEffect(auth.usuarioUid) {
+                auth.usuarioUid?.let { historialVm.cargar(it) }
+            }
+
+            HistorialScreen(
+                estado = historial,
+                onVolver = { navController.popBackStack() }
             )
         }
 
@@ -139,13 +158,13 @@ fun AppNavigation(modifier: Modifier = Modifier) {
             val lobby by lobbyVm.estado.collectAsStateWithLifecycle()
             val miUid = auth.usuarioUid ?: ""
 
-            // escuchamos la sala mientras estemos en esta pantalla
+
             DisposableEffect(codigo) {
                 lobbyVm.escuchar(codigo)
                 onDispose { lobbyVm.detenerEscucha() }
             }
 
-            // cuando el anfitrion inicia, todos pasan al juego
+
             LaunchedEffect(lobby.partida?.estado) {
                 if (lobby.partida?.estado == EstadoPartida.EN_JUEGO) {
                     navController.navigate(Rutas.juego(codigo)) {
@@ -154,7 +173,7 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                 }
             }
 
-            // si cancelaron la sala volvemos al menu
+
             LaunchedEffect(lobby.salaCerrada) {
                 if (lobby.salaCerrada) {
                     navController.popBackStack(Rutas.MENU, false)
@@ -187,8 +206,7 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                 juegoVm.iniciar(codigo, miUid)
             }
 
-            // cuando la partida termina (fin normal o abandono) pasamos al resultado
-            // se revisa el codigo para no confundirnos con datos de una partida anterior
+
             val terminada = juego.partida?.codigo == codigo &&
                     juego.partida?.estado == EstadoPartida.TERMINADA
             LaunchedEffect(terminada) {
@@ -217,7 +235,7 @@ fun AppNavigation(modifier: Modifier = Modifier) {
             val codigo = entrada.arguments?.getString("codigo") ?: ""
             val juego by juegoVm.estado.collectAsStateWithLifecycle()
 
-            // si alguno le da "jugar de nuevo", los dos vuelven al juego
+
             val reiniciada = juego.partida?.codigo == codigo &&
                     juego.partida?.estado == EstadoPartida.EN_JUEGO
             LaunchedEffect(reiniciada) {
