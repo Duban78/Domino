@@ -25,6 +25,7 @@ fun MenuScreen(
     error: String?,
     onNuevaPartida: () -> Unit,
     onUnirse: () -> Unit,
+    onHistorial: () -> Unit,
     onCerrarSesion: () -> Unit
 ) {
     Column(
@@ -57,8 +58,16 @@ fun MenuScreen(
         ) {
             Text("Unirse a partida")
         }
+        Spacer(Modifier.height(12.dp))
 
-        // TODO: aqui va el boton de Historial (lo hace mi companero)
+        // boton nuevo: abre la pantalla de historial
+        Button(
+            onClick = onHistorial,
+            enabled = !cargando,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Historial")
+        }
 
         error?.let { mensaje ->
             Spacer(Modifier.height(12.dp))
