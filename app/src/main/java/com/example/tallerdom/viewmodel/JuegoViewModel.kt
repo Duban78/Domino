@@ -21,7 +21,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-// todo lo que la pantalla de juego necesita para dibujarse
+
 data class JuegoUiState(
     val miUid: String = "",
     val partida: Partida? = null,
@@ -39,11 +39,11 @@ data class JuegoUiState(
     val esMiTurno: Boolean
         get() = partida != null && partida.estado == EstadoPartida.EN_JUEGO && partida.turnoUid == miUid
 
-    // me toca mover la ficha que cayo en un portal
+
     val enPortal: Boolean
         get() = esMiTurno && (partida?.portalFila ?: -1) >= 0
 
-    // es mi turno pero ninguna ficha de mi mano se puede jugar
+
     val sinJugada: Boolean
         get() {
             val p = partida ?: return false
@@ -68,9 +68,9 @@ class JuegoViewModel(
 
     private var codigo = ""
     private var escucha: Job? = null
-    private var historialGuardado = false   // para no guardar la misma partida dos veces
+    private var historialGuardado = false
 
-    // se llama al entrar a la pantalla, si ya estaba escuchando esa sala no hace nada
+
     fun iniciar(codigo: String, miUid: String) {
         if (this.codigo == codigo && escucha != null) return
         this.codigo = codigo
@@ -87,7 +87,7 @@ class JuegoViewModel(
         }
     }
 
-    // deja de escuchar y borra el estado (al volver al menu)
+
     fun detener() {
         escucha?.cancel()
         escucha = null
@@ -96,7 +96,7 @@ class JuegoViewModel(
         _estado.value = JuegoUiState()
     }
 
-    // llega una partida nueva desde Firestore
+
     private fun actualizarPartida(partida: Partida?) {
         _estado.update { actual ->
             // si me toca mover el portal, se resaltan sus destinos
@@ -111,7 +111,7 @@ class JuegoViewModel(
             val seleccionada = actual.fichaSeleccionada
             val mano = partida?.jugadorPorUid(actual.miUid)?.mano ?: emptyList()
 
-            // la seleccion solo sigue valida si la ficha sigue en mi mano y es mi turno
+
             val validas = if (
                 seleccionada != null && partida != null &&
                 mano.contains(seleccionada) && partida.turnoUid == actual.miUid
@@ -128,7 +128,7 @@ class JuegoViewModel(
             )
         }
 
-        // historial: si reinician la partida se permite guardar la siguiente
+
         if (partida?.estado == EstadoPartida.EN_JUEGO) historialGuardado = false
         if (partida != null && partida.estado == EstadoPartida.TERMINADA && !historialGuardado) {
             historialGuardado = true
@@ -136,7 +136,7 @@ class JuegoViewModel(
         }
     }
 
-    // cada jugador guarda su propio registro cuando la partida termina
+
     private fun guardarHistorial(partida: Partida, miUid: String) {
         val yo = partida.jugadorPorUid(miUid) ?: return
         val rival = partida.jugadores.firstOrNull { it.uid != miUid } ?: return
@@ -167,12 +167,12 @@ class JuegoViewModel(
             _estado.update { it.copy(mensaje = "No es tu turno") }
             return
         }
-        // si hay un portal pendiente primero se mueve esa ficha
+
         if (actual.enPortal) {
             _estado.update { it.copy(mensaje = "Primero mueve la ficha del portal") }
             return
         }
-        // si toca la misma ficha otra vez, se deselecciona
+
         if (actual.fichaSeleccionada == ficha) {
             cancelarSeleccion()
             return
@@ -195,12 +195,12 @@ class JuegoViewModel(
     }
 
     fun cancelarSeleccion() {
-        // en el portal no se puede cancelar: los destinos se quedan resaltados
+
         if (_estado.value.enPortal) return
         _estado.update { it.copy(fichaSeleccionada = null, casillasValidas = emptyList()) }
     }
 
-    // el jugador toca una casilla valida (con ficha seleccionada o moviendo el portal)
+
     fun colocarEn(fila: Int, columna: Int) {
         val actual = _estado.value
         val uid = actual.miUid
@@ -237,7 +237,7 @@ class JuegoViewModel(
         _estado.update { it.copy(mensaje = null) }
     }
 
-    // manda la jugada a Firestore (el motor valida dentro de la transaccion)
+
     private fun ejecutar(accion: (Partida) -> ResultadoJugada) {
         if (_estado.value.enviando) return
 
