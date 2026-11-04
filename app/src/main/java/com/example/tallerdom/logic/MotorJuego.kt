@@ -8,6 +8,14 @@ import com.example.tallerdom.model.TipoCasilla
 // Todo el flujo del juego. No usa Android ni Firebase para poder probarlo con tests
 object MotorJuego {
 
+    // revisa lo basico de cualquier accion: partida activa y turno del jugador
+    private fun errorDeTurno(partida: Partida, uid: String): String? {
+        if (partida.estado != EstadoPartida.EN_JUEGO) return "La partida no esta en juego"
+        if (partida.turnoUid != uid) return "No es tu turno"
+        if (partida.jugadorPorUid(uid) == null) return "Jugador no encontrado"
+        return null
+    }
+
     fun colocarFicha(
         partida: Partida,
         uid: String,
@@ -15,12 +23,9 @@ object MotorJuego {
         fila: Int,
         columna: Int
     ): ResultadoJugada {
-        if (partida.estado != EstadoPartida.EN_JUEGO) {
-            return ResultadoJugada.Error("La partida no esta en juego")
-        }
-        if (partida.turnoUid != uid) {
-            return ResultadoJugada.Error("No es tu turno")
-        }
+        val errorTurno = errorDeTurno(partida, uid)
+        if (errorTurno != null) return ResultadoJugada.Error(errorTurno)
+
         val jugador = partida.jugadorPorUid(uid)
             ?: return ResultadoJugada.Error("Jugador no encontrado")
         if (!jugador.mano.contains(ficha)) {
@@ -64,7 +69,50 @@ object MotorJuego {
 
         // TODO: portal (lo hace mi companero), aqui hay que revisar si casilla.tipo == PORTAL
 
-        return ResultadoJugada.Ok(avanzarTurno(actualizada))
+        return ResultadoJugada.Ok(revisarFin(avanzarTurno(actualizada)))
+    }
+
+    // si no tiene jugada, el jugador toma la primera ficha del pozo
+    fun robarFicha(partida: Partida, uid: String): ResultadoJugada {
+        val errorTurno = errorDeTurno(partida, uid)
+        if (errorTurno != null) return ResultadoJugada.Error(errorTurno)
+
+        val jugador = partida.jugadorPorUid(uid)
+            ?: return ResultadoJugada.Error("Jugador no encontrado")
+        if (ReglasDomino.tieneMovimiento(partida.tablero, jugador.mano)) {
+            return ResultadoJugada.Error("Tienes una ficha que se puede jugar")
+        }
+        if (partida.pozo.isEmpty()) {
+            return ResultadoJugada.Error("El pozo esta vacio")
+        }
+
+        val fichaRobada = partida.pozo.first()
+        val actualizada = partida.copy(
+            pozo = partida.pozo.drop(1),
+            jugadores = partida.jugadores.map { j ->
+                if (j.uid == uid) j.copy(mano = j.mano + fichaRobada) else j
+            }
+        )
+        // no se cambia el turno: puede jugar la ficha que robo o seguir robando
+        return ResultadoJugada.Ok(actualizada)
+    }
+
+    // pierde el turno: no tiene jugada y no quedan fichas en el pozo
+    fun pasarTurno(partida: Partida, uid: String): ResultadoJugada {
+        val errorTurno = errorDeTurno(partida, uid)
+        if (errorTurno != null) return ResultadoJugada.Error(errorTurno)
+
+        val jugador = partida.jugadorPorUid(uid)
+            ?: return ResultadoJugada.Error("Jugador no encontrado")
+        if (ReglasDomino.tieneMovimiento(partida.tablero, jugador.mano)) {
+            return ResultadoJugada.Error("Tienes una ficha que se puede jugar")
+        }
+        if (partida.pozo.isNotEmpty()) {
+            return ResultadoJugada.Error("Debes robar del pozo")
+        }
+
+        val conPase = partida.copy(pasesSeguidos = partida.pasesSeguidos + 1)
+        return ResultadoJugada.Ok(revisarFin(avanzarTurno(conPase)))
     }
 
     // pasa el turno al siguiente jugador, si vuelve al primero sube la ronda
@@ -76,6 +124,21 @@ object MotorJuego {
         return partida.copy(
             turnoUid = partida.jugadores[siguiente].uid,
             ronda = nuevaRonda
+        )
+    }
+
+    // detecta si la partida debe terminar y calcula el ganador
+    fun revisarFin(partida: Partida): Partida {
+        val alguienSinFichas = partida.jugadores.any { it.mano.isEmpty() }
+        val nadiePuedeMover = partida.pasesSeguidos >= partida.jugadores.size
+        val seAcabaronRondas = partida.ronda > partida.maxRondas
+
+        if (!alguienSinFichas && !nadiePuedeMover && !seAcabaronRondas) return partida
+
+        val ganador = Puntuacion.ganador(partida.jugadores)
+        return partida.copy(
+            estado = EstadoPartida.TERMINADA,
+            ganadorUid = ganador?.uid   // null = empate
         )
     }
 }
