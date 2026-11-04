@@ -240,7 +240,7 @@ object MotorJuego {
     }
 
 
-    // vuelve a repartir y empezar con los mismos jugadores (solo si ya termino)
+
     fun reiniciar(partida: Partida): ResultadoJugada {
         if (partida.estado != EstadoPartida.TERMINADA) {
             return ResultadoJugada.Error("La partida todavia no termino")
