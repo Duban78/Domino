@@ -24,6 +24,8 @@ import com.example.tallerdom.ui.screens.UnirseScreen
 import com.example.tallerdom.viewmodel.AuthViewModel
 import com.example.tallerdom.viewmodel.JuegoViewModel
 import com.example.tallerdom.viewmodel.LobbyViewModel
+import com.example.tallerdom.ui.screens.HistorialScreen
+import com.example.tallerdom.viewmodel.HistorialViewModel
 
 @Composable
 fun AppNavigation(modifier: Modifier = Modifier) {
