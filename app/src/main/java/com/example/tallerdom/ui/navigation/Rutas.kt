@@ -9,6 +9,7 @@ object Rutas {
     const val ESPERA = "espera/{codigo}"
     const val JUEGO = "juego/{codigo}"
     const val RESULTADO = "resultado/{codigo}"
+    const val HISTORIAL = "historial"
 
     fun espera(codigo: String) = "espera/$codigo"
     fun juego(codigo: String) = "juego/$codigo"
