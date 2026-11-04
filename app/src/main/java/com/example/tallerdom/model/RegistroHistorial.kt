@@ -1,6 +1,6 @@
 package com.example.tallerdom.model
 
-// una partida jugada, vista desde un jugador
+
 data class RegistroHistorial(
     val uid: String = "",
     val rival: String = "",

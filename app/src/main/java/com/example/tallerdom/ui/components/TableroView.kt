@@ -17,7 +17,7 @@ import com.example.tallerdom.model.Ficha
 import com.example.tallerdom.model.Tablero
 import com.example.tallerdom.ui.theme.TallerDomTheme
 
-// dibuja la cuadricula completa. No tiene logica: solo avisa cuando tocan una casilla valida
+
 @Composable
 fun TableroView(
     tablero: Tablero,
@@ -62,7 +62,7 @@ fun TableroView(
     }
 }
 
-// vista previa para ver el tablero sin correr la app
+
 @Preview(showBackground = true)
 @Composable
 private fun TableroPreview() {

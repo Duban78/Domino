@@ -29,7 +29,6 @@ fun EsperaScreen(
     maxJugadores: Int = 2
 ) {
     val jugadores = partida?.jugadores ?: emptyList()
-    // el anfitrion es el primero que entro a la sala
     val soyAnfitrion = jugadores.firstOrNull()?.uid == miUid
 
     Column(

@@ -99,7 +99,7 @@ class JuegoViewModel(
 
     private fun actualizarPartida(partida: Partida?) {
         _estado.update { actual ->
-            // si me toca mover el portal, se resaltan sus destinos
+
             if (partida != null && partida.turnoUid == actual.miUid && partida.portalFila >= 0) {
                 return@update actual.copy(
                     partida = partida,

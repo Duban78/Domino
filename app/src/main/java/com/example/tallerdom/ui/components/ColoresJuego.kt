@@ -3,7 +3,6 @@ package com.example.tallerdom.ui.components
 import androidx.compose.ui.graphics.Color
 import com.example.tallerdom.model.TipoCasilla
 
-// colores e iconos que se repiten en varios componentes
 object ColoresJuego {
     val Yo = Color(0xFF2E7D32)
     val Rival = Color(0xFF1565C0)

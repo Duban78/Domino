@@ -10,8 +10,7 @@ object Puntuacion {
     const val PUNTOS_TESORO = 5
     const val PUNTOS_TRAMPA = -2
 
-    // puntos que gana el jugador al poner ficha en una casilla
-    // conquistaCompleta es false cuando es la primera ficha de una fortaleza
+
     fun puntosPorConquista(tipo: TipoCasilla, conquistaCompleta: Boolean): Int {
         if (!conquistaCompleta) return 0
 
@@ -24,8 +23,7 @@ object Puntuacion {
         return PUNTOS_TERRITORIO + efecto
     }
 
-    // gana el de mas puntos, si empatan gana el de mas territorios
-    // si siguen empatados devuelve null (empate)
+
     fun ganador(jugadores: List<Jugador>): Jugador? {
         val ordenados = jugadores.sortedWith(
             compareByDescending<Jugador> { it.puntaje }

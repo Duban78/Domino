@@ -18,7 +18,7 @@ class HistorialRepository(
         }
     }
 
-    // se filtra por uid y se ordena aqui, asi Firestore no pide crear un indice
+
     suspend fun listar(uid: String): Result<List<RegistroHistorial>> {
         return try {
             val snap = coleccion.whereEqualTo("uid", uid).get().await()

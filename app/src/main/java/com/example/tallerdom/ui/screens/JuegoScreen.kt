@@ -35,7 +35,7 @@ import com.example.tallerdom.ui.components.ManoFichas
 import com.example.tallerdom.ui.components.TableroView
 import com.example.tallerdom.viewmodel.JuegoUiState
 
-// Pantalla sin logica: dibuja el estado y avisa con callbacks
+
 @Composable
 fun JuegoScreen(
     estado: JuegoUiState,
@@ -52,7 +52,7 @@ fun JuegoScreen(
 
     var confirmandoAbandono by remember { mutableStateOf(false) }
 
-    // el boton atras de Android tambien pide confirmar antes de salir
+
     BackHandler { confirmandoAbandono = true }
 
     if (partida == null || yo == null) {

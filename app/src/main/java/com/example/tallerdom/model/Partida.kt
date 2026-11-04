@@ -2,7 +2,7 @@ package com.example.tallerdom.model
 
 enum class EstadoPartida { ESPERANDO, EN_JUEGO, TERMINADA }
 
-// toda la partida vive en un solo documento de Firestore: salas/{codigo}
+
 data class Partida(
     val codigo: String = "",
     val estado: EstadoPartida = EstadoPartida.ESPERANDO,

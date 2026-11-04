@@ -21,7 +21,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-// una ficha de domino vertical: numero de arriba, linea y numero de abajo
+
 @Composable
 fun FichaView(
     ficha: com.example.tallerdom.model.Ficha,

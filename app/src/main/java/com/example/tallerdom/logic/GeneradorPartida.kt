@@ -11,8 +11,7 @@ object GeneradorPartida {
 
     const val FICHAS_POR_JUGADOR = 7
 
-    // tablero de 5x5 con casillas especiales en posiciones al azar
-    // el centro siempre es normal porque ahi va la primera ficha
+
     fun crearTablero(filas: Int = 5, columnas: Int = 5): Tablero {
         val centroF = filas / 2
         val centroC = columnas / 2
@@ -53,7 +52,7 @@ object GeneradorPartida {
         return Tablero(filas, columnas, casillas)
     }
 
-    // las 28 fichas del doble seis, revueltas
+
     fun crearFichas(): MutableList<Ficha> {
         val fichas = mutableListOf<Ficha>()
         for (i in 0..6) {
@@ -65,7 +64,7 @@ object GeneradorPartida {
         return fichas
     }
 
-    // reparte 7 fichas a cada jugador y lo que sobra queda en el pozo
+
     fun iniciarPartida(partida: Partida): Partida {
         val fichas = crearFichas()
 

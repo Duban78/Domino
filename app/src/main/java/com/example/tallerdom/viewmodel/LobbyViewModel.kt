@@ -60,7 +60,6 @@ class LobbyViewModel(
         }
     }
 
-    // empieza a escuchar la sala en tiempo real
     fun escuchar(codigo: String) {
         escucha?.cancel()
         _estado.update { it.copy(partida = null, salaCerrada = false, error = null) }
@@ -77,8 +76,7 @@ class LobbyViewModel(
         }
     }
 
-    // al dejar la sala borramos tambien lo que quedo guardado, si no la proxima
-    // sala que abrimos veria datos de la anterior
+
     fun detenerEscucha() {
         escucha?.cancel()
         escucha = null
@@ -93,7 +91,6 @@ class LobbyViewModel(
     }
 
     fun salirDeSala(codigo: String, uid: String, onListo: () -> Unit) {
-        // primero dejamos de escuchar para no reaccionar a nuestro propio cambio
         detenerEscucha()
         viewModelScope.launch {
             repo.salirDeEspera(codigo, uid)

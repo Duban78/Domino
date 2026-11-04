@@ -15,11 +15,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-// lo que la pantalla necesita saber del login
+
 data class AuthUiState(
     val cargando: Boolean = false,
     val error: String? = null,
-    val usuarioUid: String? = null,   // null = no hay sesion
+    val usuarioUid: String? = null,
     val nombre: String? = null
 )
 
@@ -96,8 +96,7 @@ class AuthViewModel(
         _estado.update { it.copy(error = null) }
     }
 
-    // convierte los errores de firebase a mensajes entendibles
-    // ojo con el orden: WeakPassword hereda de InvalidCredentials
+
     private fun traducirError(e: Throwable): String = when (e) {
         is FirebaseAuthWeakPasswordException -> "La contrasena es muy debil"
         is FirebaseAuthUserCollisionException -> "Ese correo ya esta registrado"

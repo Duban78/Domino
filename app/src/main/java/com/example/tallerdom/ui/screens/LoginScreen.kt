@@ -27,7 +27,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.example.tallerdom.viewmodel.AuthUiState
 
-// Pantalla sin logica: recibe el estado y avisa con callbacks
+
 @Composable
 fun LoginScreen(
     estado: AuthUiState,

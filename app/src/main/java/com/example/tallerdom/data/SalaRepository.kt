@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 
-// Habla con Firestore. Las reglas del juego NO estan aqui, estan en MotorJuego
+
 class SalaRepository(
     private val db: FirebaseFirestore = FirebaseFirestore.getInstance()
 ) {
@@ -27,7 +27,7 @@ class SalaRepository(
         return (1..4).map { LETRAS.random() }.joinToString("")
     }
 
-    // crea la sala con el creador como primer jugador y devuelve el codigo
+
     suspend fun crearSala(uid: String, nombre: String): Result<String> {
         return try {
             var codigo = generarCodigo()
@@ -49,7 +49,6 @@ class SalaRepository(
         }
     }
 
-    // mete al jugador en la sala si existe, esta esperando y hay cupo
     suspend fun unirse(codigo: String, uid: String, nombre: String): Result<Unit> {
         return try {
             val ref = salas.document(codigo.trim().uppercase())
@@ -78,7 +77,7 @@ class SalaRepository(
         }
     }
 
-    // cada vez que alguien cambia la sala, este flow emite la partida nueva (tiempo real)
+
     fun escucharSala(codigo: String): Flow<Partida?> = callbackFlow {
         val registro = salas.document(codigo).addSnapshotListener { snap, error ->
             if (error != null) {
@@ -90,8 +89,7 @@ class SalaRepository(
         awaitClose { registro.remove() }
     }
 
-    // aplica una accion del MotorJuego sobre la partida dentro de una transaccion
-    // si el motor devuelve error no se guarda nada
+
     suspend fun jugar(codigo: String, accion: (Partida) -> ResultadoJugada): Result<Unit> {
         return try {
             val ref = salas.document(codigo)
@@ -115,7 +113,7 @@ class SalaRepository(
         }
     }
 
-    // reparte fichas y arranca la partida (necesita 2 jugadores)
+
     suspend fun iniciarPartida(codigo: String): Result<Unit> = jugar(codigo) { partida ->
         if (partida.jugadores.size < MAX_JUGADORES) {
             ResultadoJugada.Error("Falta un jugador")
@@ -126,7 +124,7 @@ class SalaRepository(
         }
     }
 
-    // el anfitrion (primer jugador) cancela y borra la sala, el invitado solo sale
+
     suspend fun salirDeEspera(codigo: String, uid: String): Result<Unit> {
         return try {
             val ref = salas.document(codigo)

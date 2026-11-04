@@ -10,7 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
-// tarjeta reutilizable de un jugador (la uso en la sala de espera)
+
 @Composable
 fun JugadorItem(
     nombre: String,

@@ -18,8 +18,7 @@ import androidx.compose.ui.unit.sp
 import com.example.tallerdom.model.Casilla
 import com.example.tallerdom.model.TipoCasilla
 
-// un territorio del tablero
-// colorDueno = null significa que nadie lo ha conquistado
+
 @Composable
 fun CasillaView(
     casilla: Casilla,
@@ -42,7 +41,7 @@ fun CasillaView(
             .clickable { onClick() },
         contentAlignment = Alignment.Center
     ) {
-        // icono del tipo: grande si esta vacia, chiquito en la esquina si ya tiene ficha
+
         if (casilla.tipo != TipoCasilla.NORMAL) {
             Text(
                 text = ColoresJuego.icono(casilla.tipo),
@@ -71,7 +70,7 @@ fun CasillaView(
             }
         }
 
-        // fortaleza con una sola conquista: falta la segunda
+
         if (casilla.tipo == TipoCasilla.FORTALEZA && tieneFicha && casilla.conquistas < 2) {
             Text(
                 text = "1/2",

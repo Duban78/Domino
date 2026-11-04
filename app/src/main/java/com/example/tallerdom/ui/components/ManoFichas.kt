@@ -10,7 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.tallerdom.model.Ficha
 
-// las fichas del jugador en una fila con scroll horizontal
+
 @Composable
 fun ManoFichas(
     mano: List<Ficha>,

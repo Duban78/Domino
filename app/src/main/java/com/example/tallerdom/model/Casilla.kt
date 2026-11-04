@@ -4,7 +4,7 @@ enum class TipoCasilla {
     NORMAL, BONUS, TESORO, TRAMPA, FORTALEZA, PORTAL
 }
 
-// cada casilla es un territorio del tablero
+
 data class Casilla(
     val fila: Int = 0,
     val columna: Int = 0,
