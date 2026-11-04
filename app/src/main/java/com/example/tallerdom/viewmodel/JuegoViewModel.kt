@@ -78,6 +78,14 @@ class JuegoViewModel(
         }
     }
 
+    // deja de escuchar y borra el estado (al volver al menu)
+    fun detener() {
+        escucha?.cancel()
+        escucha = null
+        codigo = ""
+        _estado.value = JuegoUiState()
+    }
+
     // llega una partida nueva desde Firestore
     private fun actualizarPartida(partida: Partida?) {
         _estado.update { actual ->
@@ -152,6 +160,15 @@ class JuegoViewModel(
     fun pasar() {
         val uid = _estado.value.miUid
         ejecutar { partida -> MotorJuego.pasarTurno(partida, uid) }
+    }
+
+    fun abandonar() {
+        val uid = _estado.value.miUid
+        ejecutar { partida -> MotorJuego.abandonar(partida, uid) }
+    }
+
+    fun reiniciar() {
+        ejecutar { partida -> MotorJuego.reiniciar(partida) }
     }
 
     fun limpiarMensaje() {

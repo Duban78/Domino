@@ -141,4 +141,27 @@ object MotorJuego {
             ganadorUid = ganador?.uid   // null = empate
         )
     }
+
+    // el jugador se sale en plena partida: termina y gana el rival
+    fun abandonar(partida: Partida, uid: String): ResultadoJugada {
+        if (partida.estado != EstadoPartida.EN_JUEGO) {
+            return ResultadoJugada.Error("La partida no esta en juego")
+        }
+        if (partida.jugadorPorUid(uid) == null) {
+            return ResultadoJugada.Error("Jugador no encontrado")
+        }
+
+        val rival = partida.jugadores.firstOrNull { it.uid != uid }
+        return ResultadoJugada.Ok(
+            partida.copy(estado = EstadoPartida.TERMINADA, ganadorUid = rival?.uid)
+        )
+    }
+
+    // vuelve a repartir y empezar con los mismos jugadores (solo si ya termino)
+    fun reiniciar(partida: Partida): ResultadoJugada {
+        if (partida.estado != EstadoPartida.TERMINADA) {
+            return ResultadoJugada.Error("La partida todavia no termino")
+        }
+        return ResultadoJugada.Ok(GeneradorPartida.iniciarPartida(partida))
+    }
 }
