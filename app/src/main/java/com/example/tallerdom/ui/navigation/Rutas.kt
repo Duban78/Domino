@@ -5,5 +5,10 @@ object Rutas {
     const val LOGIN = "login"
     const val REGISTRO = "registro"
     const val MENU = "menu"
-    // las demas las agrego en los commits que siguen
+    const val UNIRSE = "unirse"
+    const val ESPERA = "espera/{codigo}"
+    const val JUEGO = "juego/{codigo}"
+
+    fun espera(codigo: String) = "espera/$codigo"
+    fun juego(codigo: String) = "juego/$codigo"
 }
